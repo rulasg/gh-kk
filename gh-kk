@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Hello gh-kk!"
+# echo "Hello gh-kk!"
+Write-Host "Hello gh-kk!" -ForegroundColor Green
 
 # Snippets to help get started:
 
