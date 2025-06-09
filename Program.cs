@@ -9,6 +9,7 @@ REFERENCE: https://learn.microsoft.com/en-us/dotnet/standard/commandline/
 using System.Collections;
 using System.CommandLine;
 using System.Net.NetworkInformation;
+using gh_kk.Commands;
 
 namespace gh_kk;
 
@@ -30,7 +31,10 @@ class Program
         rootCommand.AddGlobalOption(verboseOption);
         GlobalOptions.AddOption("verbose", verboseOption);
 
-        rootCommand.AddSubCommand1().AddSubCommand2();
+        rootCommand
+            .AddSubCommand1()
+            .AddSubCommand2()
+            .AddGetTokenCommand();
 
         if (args.Length == 0)
             return await rootCommand.InvokeAsync("--help");
