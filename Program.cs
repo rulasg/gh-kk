@@ -6,54 +6,66 @@ to create a command-line interface (CLI) with a commands to manage projects.
 REFERENCE: https://learn.microsoft.com/en-us/dotnet/standard/commandline/
 */
 
+using System.Collections;
 using System.CommandLine;
+using System.Net.NetworkInformation;
 
-namespace kk;
+namespace gh_kk;
 
 class Program
 {
+
+    static Hashtable globalOptions = new Hashtable();
+
     static async Task<int> Main(string[] args)
     {
 
         var rootCommand = new RootCommand("Sample app for System.CommandLine"); // No action if no parameter is provided
 
-        SetupSubcommand1(rootCommand);
+        var verboseOption = new Option<bool>(
+            aliases: new[] { "--verbose", "-v" },
+            description: "Enable verbose output (global)");
+        verboseOption.AddAlias("-v");
+
+        rootCommand.AddGlobalOption(verboseOption);
+        GlobalOptions.AddOption("verbose", verboseOption);
+
+        rootCommand.AddSubCommand1().AddSubCommand2();
+
+        if (args.Length == 0)
+            return await rootCommand.InvokeAsync("--help");
 
         return await rootCommand.InvokeAsync(args);
     }
 
+}
 
+static class GlobalOptions
+{
+    static Hashtable options;
 
-    // Function to setup the project get command
-    static void SetupSubcommand1(RootCommand rootCommand)
+    static GlobalOptions()
     {
-        var subCommandOption1 = new Option<string>(
-            name: "--owner",
-            description: "The owner of the project."
-        );
+        options = new Hashtable();
+    }
 
-        var subCommandOption2 = new Option<int>(
-            name: "--number",
-            description: "The number of the project."
-        );
-
-        var subCommand1 = new Command(
-            name: "subcommand1",
-            description: "Call sub command 1"
-        ){
-                subCommandOption1,
-                subCommandOption2
-            };
-
-
-        subCommand1.SetHandler((opt1, opt2) =>
+    public static void AddOption(string name, Option option)
+    {
+        if (!options.ContainsKey(name))
         {
-            var str = $"Called SubCommand1 {opt2} owned by {opt1}.";
-            Console.WriteLine(str);
+            options.Add(name, option);
+        }
+    }
 
-        }, subCommandOption1, subCommandOption2);
+    public static Option<T> GetOption<T>(string name)
+    {
+        Option<T>? optionValue = options[name] as Option<T>;
 
-        rootCommand.AddCommand(subCommand1);
+        if (optionValue == null)
+        {
+            throw new ArgumentException($"Option {name} is not of type Option<{typeof(T).Name}>");
+        }
 
+        return optionValue;
     }
 }
