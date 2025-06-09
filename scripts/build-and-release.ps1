@@ -1,7 +1,7 @@
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess)]
 param (
-    [Parameter()][string]$Project = "/Users/rulasg/Downloads/gh-kk/gh-kk.csproj",
-    [Parameter()][string]$Tag
+    [Parameter()][string]$Tag,
+    [Parameter()][switch]$Force
 )
 
 # Stop on errors
@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 $runtimes = @{
     "osx-x64" = "darwin-amd64"
     "osx-arm64" = "darwin-arm64"
-    "linux-x86" = "linux-386"
+    # "linux-x86" = "linux-386"   # <-- No longer supported in .NET 6+ or higher
     "linux-arm" = "linux-arm"
     "linux-x64" = "linux-amd64"
     "linux-arm64" = "linux-arm64"
@@ -27,10 +27,15 @@ if (-not (Test-Path -Path $distDir)) {
     New-Item -ItemType Directory -Path $distDir
 }
 # Reset uploads directory
-if (Test-Path -Path $uploads) {
+if ((Test-Path -Path $uploads) -and $Force) {
     Remove-Item -Path $uploads -Recurse -Force
-} 
-New-Item -ItemType Directory -Path $uploads
+}
+
+# Create uploads directory
+# check existence as in whatif it may exist
+if( -not (Test-Path -Path $uploads)) {
+    New-Item -ItemType Directory -Path $uploads
+}
 
 # Build for each runtime
 foreach ($runtime in $runtimes.Keys) {
@@ -42,13 +47,18 @@ foreach ($runtime in $runtimes.Keys) {
         $extension = ".exe"
     }
     
-    # Publish for the specific runtime
-    dotnet publish $Project --configuration Release --runtime $runtime --ucr /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --output "$distDir/$runtime"
-
-    # Find binary file (ignore .pdb files) and copy to uploads with Go platform name
     $binaryName = "gh-kk$extension"
     $binaryPath = "$distDir/$runtime/$binaryName"
-    
+
+    if(($binaryPath | Test-Path) -and (-not $Force)) {
+        Write-Host "Binary already exists at $binaryPath. Use -Force to rebuild."
+        continue
+    }
+
+    # Publish for the specific runtime
+    dotnet publish --configuration Release --runtime $runtime --ucr /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true --output "$distDir/$runtime"
+
+    # Find binary file (ignore .pdb files) and copy to uploads with Go platform name
     if (Test-Path -Path $binaryPath) {
         $goPlatform = $runtimes[$runtime]
         $goFileName = "gh-kk-$goPlatform$extension"
@@ -57,7 +67,6 @@ foreach ($runtime in $runtimes.Keys) {
     } else {
         Write-Warning "Binary file not found at $binaryPath"
     }
-
 }
 
 # Check if there are any files in dist and uploads directories
@@ -86,16 +95,23 @@ if ($env:GPG_FINGERPRINT) {
     $includePattern = "dist/* checksums*"
 }
 
-# Get the latest tag
-if([string]::IsNullOrEmpty($Tag)) {
-    Write-Host "No tag provided, fetching latest tag from git..."
-    $Tag = git describe --tags --abbrev=0
-} else {
-    git tag -a $Tag -m "Release tag" -s
+# Create tag if provided in parameter
+if(-Not [string]::IsNullOrEmpty($Tag)) {
+    # Check if tag already exists
+    $existingTags = git tag -l $Tag
+    if ($existingTags) {
+        Write-Host "Tag $Tag already exists, skipping tag creation."
+    } else {
+        Write-Host "Tag $Tag does not exist, creating new tag."
+        # Create and Push tags to remote
+        git tag -a $Tag -m "Release tag" -s
+        git push --tags
+    }
+
 }
 
-# Push tags to 
-git push --tags
+# Get the latest tag
+$Tag = git describe --tags --abbrev=0
 
 # Determine if this is a prerelease (contains hyphen in tag)
 $prerelease = ""
@@ -103,9 +119,11 @@ if ($tag -match ".*-.*") {
     $prerelease = "-p"
 }
 
-$reponame = (git remote get-url origin) -replace 'https://github.com/','' -replace '\.git$',''
 
 # Generate release notes
+# Extract owner/repo from git remote URL (handles HTTPS and SSH, strips .git)
+# if($(git remote get-url origin) -match '[:/]([^/:]+)/([^/]+?)(\.git)?$') { $reponame = "$($matches[1])/$($matches[2])" } else {throw "Wrong  URL: $remoteUrl" }
+# Generate release notes using GitHub api
 # gh api repos/$reponame/releases/generate-notes -f tag_name="$tag" -q .body | Out-File -FilePath "CHANGELOG.md" -Encoding utf8
 
 # Create the release
@@ -118,6 +136,8 @@ if($releaselist.tagName -contains $tag) {
 }
 
 foreach ($file in (Get-ChildItem -Path $uploads)) {
-    Write-Host "Uploading $($file.Name) to release..."
-    gh release upload $tag $file.FullName --clobber
+    if ($PSCmdlet.ShouldProcess($file.Name, "Uploading to release")) {
+        Write-Host "Uploading $($file.Name) to release..."
+        gh release upload $tag $file.FullName --clobber
+    } 
 }
