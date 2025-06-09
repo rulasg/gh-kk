@@ -1,7 +1,7 @@
 
 using System;
 
-namespace gh_kk.ClassIntegration;
+namespace gh_kk.Integrations;
 
 public static class os_Integration
 {
