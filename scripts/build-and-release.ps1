@@ -97,13 +97,11 @@ function New-GitHubReleaseIfNotExists {
 function Update-CsprojVersionProperties {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory)][string]$Tag
+        [Parameter(Mandatory)][string]$Tag,
+        [Parameter()][string]$CsProjPath
     )
-
-    $tagInfo = Get-TagAndSuffix -Tag $Tag
     
-    # Get project file on the current directory
-    $csprojPath = Get-ChildItem -Path . -Filter "*.csproj" | Select-Object -First 1
+    $tagInfo = Get-TagAndSuffix -Tag $Tag
     
     if (-not $csprojPath) {
         Write-Error "No .csproj file found in the current directory."
@@ -178,14 +176,31 @@ function Get-Runtimes {
     return $ret
 }
 
+function Initialize-Folder([string]$Path, [switch]$Force) {
+    # Create new folder if it does not exists
+    # if exists and Force is set, recreate it
+    if (-not (Test-Path -Path $Path)) {
+        Write-Host "Creating directory at $Path"
+        New-Item -ItemType Directory -Path $Path
+    } elseif ($Force) {
+        Write-Host "Recreating existing directory at $Path"
+        Remove-Item -Path $Path -Recurse -Force
+        $null = New-Item -ItemType Directory -Path $Path 
+    } else {
+        Write-Host "Directory already exists at $Path, skipping creation."
+    }
+}
+
 ###################################################
 
 function Invoke-BuildAndRelease {
 
     [CmdletBinding(SupportsShouldProcess)]
     param (
+        [Parameter()][string]$RootFolder = ".",
         [Parameter()][string]$Tag,
-        [Parameter()][switch]$Force
+        [Parameter()][switch]$Force,
+        [Parameter()][switch]$SkipBranchCheck
     )
 
     # Stop on errors
@@ -195,36 +210,24 @@ function Invoke-BuildAndRelease {
     # Get current branch
     $currentBranch = git rev-parse --abbrev-ref HEAD
 
-    if ($currentBranch -ne "main") {
+    if ($currentBranch -ne "main" -and -not $SkipBranchCheck) {
         Write-Error "This script must be run from the default branch ($defaultBranch). Current branch: $currentBranch"
         return
     }
 
-    Write-Host "Running on main branch, continuing with release process..."
+    Write-Host "Running on $currentBranch branch, continuing with release process..."
 
     # Replace direct $runtimes assignment with function call
     $runtimes = Get-Runtimes -Test
 
     # Create dist and uploads directories if they don't exist
-    $rootFolder = '.'
-    $csprojPath = $rootFolder | Join-Path -ChildPath "gh-kk.csproj"
-    $distDir = $rootFolder | Join-Path -ChildPath "dist"
-    $uploads = $rootFolder | Join-Path -ChildPath "uploads"
+    $csprojPath = $RootFolder | Join-Path -ChildPath "gh-kk" -AdditionalChildPath "gh-kk.csproj"
+    $distDir = $RootFolder | Join-Path -ChildPath "dist"
+    $uploads = $RootFolder | Join-Path -ChildPath "uploads"
 
-    # create dist directory
-    if (-not (Test-Path -Path $distDir)) {
-        New-Item -ItemType Directory -Path $distDir
-    }
-    # Reset uploads directory
-    if ((Test-Path -Path $uploads) -and $Force) {
-        Remove-Item -Path $uploads -Recurse -Force
-    }
-
-    # Create uploads directory
-    # check existence as in whatif it may exist
-    if ( -not (Test-Path -Path $uploads)) {
-        New-Item -ItemType Directory -Path $uploads
-    }
+    # initialize dist and uploads directories
+    Initialize-Folder -Path $distDir
+    Initialize-Folder -Path $uploads -Force:$Force
 
     # Get or create the tag
     # $Tag = Get-OrCreateTag -Tag $Tag
@@ -235,7 +238,7 @@ function Invoke-BuildAndRelease {
     }
 
     # Update the project properties with the tag information
-    if (-not (Update-CsprojVersionProperties -Tag $Tag)) {
+    if (-not (Update-CsprojVersionProperties -Tag $Tag -CsProjPath $csprojPath)) {
         Write-Error "Failed to update project properties. Exiting."
         return
     }
@@ -274,18 +277,19 @@ function Invoke-BuildAndRelease {
     }
 
     # restore the csproj file to avoid committing version changes
+    Write-Host "Restoring $csprojPath to avoid committing version changes..."
     git restore $csprojPath
 
     # Check if there are any files in dist and uploads directories
     $uploadFiles = Get-ChildItem -Path $uploads
 
     # Generate checksums if GPG_FINGERPRINT is set
-    $checksumFile = $uploads | Join-Path -ChildPath "checksums.txt"
+    $checksumFileName = "checksums.txt"
+    $checksumFile = $uploads | Join-Path -ChildPath $checksumFileName
     foreach ($file in (Get-ChildItem -Path $uploadFiles)) {
         Get-FileHash -Path $file.FullName -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $($file.Name)" } | Out-File -Append -FilePath $checksumFile -Encoding utf8
     }
-    Write-Host "Uploading checksums file to release..."
-    gh release upload $tag $checksumFile --clobber
+
     # Sign checksums with GPG
     # gpg --output checksums.txt.sig --detach-sign checksums.txt
 
