@@ -26,7 +26,7 @@ class CmdTest
 
             // Capture the console output
             var output = _consoleOutput.ToString();
-            var ret = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var ret = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
             // Return the console output as an array of strings
             return ret;
