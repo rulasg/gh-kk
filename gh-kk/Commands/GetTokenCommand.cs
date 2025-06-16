@@ -6,7 +6,7 @@ using gh_kk.Integration.Interfaces;
 
 namespace gh_kk.Commands;
 
-public static class GetToken
+public static class GetTokenCommand
 {
     public static RootCommand AddGetTokenCommand(this RootCommand rootCommand, IGhIntegration ghIntegration, GlobalOptions globalOptions)
     {
@@ -19,7 +19,7 @@ public static class GetToken
 
         getTokenCommand.SetHandler((verbose) =>
         {
-            GetToken.Invoke(ghIntegration, verbose);
+            GetTokenCommand.Invoke(ghIntegration, verbose);
         }, verboseOption);
 
         rootCommand.AddCommand(getTokenCommand);
