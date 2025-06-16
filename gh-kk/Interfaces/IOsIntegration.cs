@@ -1,6 +1,6 @@
 using gh_kk.Integration;
 
-namespace gh_kk.Integration.Interfaces;
+namespace gh_kk.Interfaces;
 
 public interface IOsIntegration
 {

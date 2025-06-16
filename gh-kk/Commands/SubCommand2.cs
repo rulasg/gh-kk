@@ -1,11 +1,12 @@
 using System;
 using System.CommandLine;
+using gh_kk.Interfaces;
 
 namespace gh_kk;
 
 public static class SubCommand2
 {
-    public static RootCommand AddSubCommand2(this RootCommand rootCommand, GlobalOptions globalOptions)
+    public static RootCommand AddSubCommand2(this RootCommand rootCommand, IGlobalOptions globalOptions)
     {
         var cmd2Arg1 = new Argument<string>(
             name: "owner",

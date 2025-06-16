@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using Xunit;
 using Moq;
-using gh_kk.Integration.Interfaces;
+using gh_kk.Interfaces;
 using gh_kk.Commands;
 using System.CommandLine;
 

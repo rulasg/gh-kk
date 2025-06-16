@@ -1,10 +1,11 @@
 using System;
 using System.Collections;
 using System.CommandLine;
+using gh_kk.Interfaces;
 
 namespace gh_kk;
 
-public class GlobalOptions
+public class GlobalOptions : IGlobalOptions
 {
     readonly Hashtable options;
 

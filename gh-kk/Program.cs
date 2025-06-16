@@ -10,12 +10,14 @@ using System.Collections;
 using System.CommandLine;
 using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
+using System.CommandLine.Binding;
 using gh_kk.Commands;
 using gh_kk.Integration;
-using gh_kk.Integration.Interfaces;
+using gh_kk.Interfaces;
 
 [assembly: InternalsVisibleTo("gh-kk.test")]
-namespace gh_kk{
+namespace gh_kk
+{
 
     internal class Program
     {
@@ -31,7 +33,7 @@ namespace gh_kk{
             verboseOption.AddAlias("-v");
 
             rootCommand.AddGlobalOption(verboseOption);
-            var globalOptions = new GlobalOptions();
+            IGlobalOptions globalOptions = new GlobalOptions();
             globalOptions.AddOption("verbose", verboseOption);
 
             // Set up dependencies
@@ -49,6 +51,12 @@ namespace gh_kk{
             return await rootCommand.InvokeAsync(args);
         }
 
+    }
+
+    public class MyCustomBinder : BinderBase<IOsIntegration>
+    {
+        protected override IOsIntegration GetBoundValue(System.CommandLine.Binding.BindingContext bindingContext)
+            => new OsIntegration();
     }
 
 }

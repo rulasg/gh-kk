@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.CommandLine;
+using gh_kk.Interfaces;
 
 namespace gh_kk;
 
@@ -8,7 +9,7 @@ public static class SubCommand1
 {
 
     // Function to setup the project get command
-    public static RootCommand AddSubCommand1(this RootCommand rootCommand, GlobalOptions globalOptions)
+    public static RootCommand AddSubCommand1(this RootCommand rootCommand, IGlobalOptions globalOptions)
     {
         var cmd1Arg1 = new Argument<string>(
             name: "owner",

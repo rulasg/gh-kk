@@ -1,5 +1,5 @@
 using System;
-using gh_kk.Integration.Interfaces;
+using gh_kk.Interfaces;
 
 namespace gh_kk.Integration;
 

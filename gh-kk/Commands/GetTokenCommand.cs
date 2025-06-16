@@ -2,13 +2,13 @@ using System;
 using System.Collections;
 using System.CommandLine;
 using gh_kk.Integration;
-using gh_kk.Integration.Interfaces;
+using gh_kk.Interfaces;
 
 namespace gh_kk.Commands;
 
 public static class GetTokenCommand
 {
-    public static RootCommand AddGetTokenCommand(this RootCommand rootCommand, IGhIntegration ghIntegration, GlobalOptions globalOptions)
+    public static RootCommand AddGetTokenCommand(this RootCommand rootCommand, IGhIntegration ghIntegration, IGlobalOptions globalOptions)
     {
         var verboseOption = globalOptions.GetOption<bool>("verbose");
 

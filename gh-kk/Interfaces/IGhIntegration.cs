@@ -1,4 +1,4 @@
-namespace gh_kk.Integration.Interfaces;
+namespace gh_kk.Interfaces;
 
 public interface IGhIntegration
 {
