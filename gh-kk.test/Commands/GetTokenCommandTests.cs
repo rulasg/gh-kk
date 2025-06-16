@@ -149,37 +149,46 @@ public class GetTokenCommandTests
         Assert.Same(rootCommand, result);
         Assert.Single(rootCommand.Subcommands, cmd => cmd.Name == "get-token");
     }
-    
+
     [Fact]
     public void Should_execute_command_when_invoked_from_commandline()
     {
         // Arrange
         var cmdTest = new CmdTest();
         var args = new string[] { "get-token" };
-        
+        Environment.SetEnvironmentVariable("GH_TOKEN", "fakeToken");
+
         // Act
         var result = cmdTest.RunAndGetConsoleOutput(args);
-        
+
         // Assert
-        // Note: This test will depend on the actual state of gh auth.
-        // If not authenticated, there should be an error message
-        // If authenticated, there should be a token
-        // We're just checking that the command is executed
-        Assert.NotEmpty(result);
+        // Count occurrences of newline to determine number of lines in output
+        Assert.Single(result,"fakeToken");
+        
+        // Clean up the environment variable after the test
+        Environment.SetEnvironmentVariable("GH_TOKEN", null);
     }
-    
+
     [Fact]
     public void Should_execute_command_with_verbose_flag()
     {
         // Arrange
         var cmdTest = new CmdTest();
         var args = new string[] { "get-token", "--verbose" };
-        
+        // Set the environment variable before running the test
+        Environment.SetEnvironmentVariable("GH_TOKEN", "fakeToken");
+
+
         // Act
         var result = cmdTest.RunAndGetConsoleOutput(args);
-        
+
         // Assert
-        // Note: This test will depend on the actual state of gh auth
-        Assert.NotEmpty(result);
+        // Count occurrences of newline to determine number of lines in output
+        Assert.Equal(2, result.Length);
+        Assert.Contains("Successfully retrieved GitHub token.", result);
+        Assert.Contains("fakeToken", result);
+
+        // Clean up the environment variable after the test
+        Environment.SetEnvironmentVariable("GH_TOKEN", null);
     }
 }
