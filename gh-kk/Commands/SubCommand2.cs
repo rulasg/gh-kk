@@ -5,7 +5,7 @@ namespace gh_kk;
 
 public static class SubCommand2
 {
-    public static RootCommand AddSubCommand2(this RootCommand rootCommand)
+    public static RootCommand AddSubCommand2(this RootCommand rootCommand, GlobalOptions globalOptions)
     {
         var cmd2Arg1 = new Argument<string>(
             name: "owner",
@@ -33,7 +33,7 @@ public static class SubCommand2
         };
 
         // Remove the local verbose option from the handler and use the global one instead
-        var verboseOption = GlobalOptions.GetOption<bool>("verbose");
+        var verboseOption = globalOptions.GetOption<bool>("verbose");
 
         subCommand2.SetHandler((owner, number, description, verbose) =>
         {

@@ -11,6 +11,8 @@ using System.CommandLine;
 using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using gh_kk.Commands;
+using gh_kk.Integration;
+using gh_kk.Integration.Interfaces;
 
 [assembly: InternalsVisibleTo("gh-kk.test")]
 namespace gh_kk{
@@ -29,12 +31,17 @@ namespace gh_kk{
             verboseOption.AddAlias("-v");
 
             rootCommand.AddGlobalOption(verboseOption);
-            GlobalOptions.AddOption("verbose", verboseOption);
+            var globalOptions = new GlobalOptions();
+            globalOptions.AddOption("verbose", verboseOption);
+
+            // Set up dependencies
+            var osIntegration = new Integration.OsIntegration();
+            var ghIntegration = new Integration.GhIntegration(osIntegration);
 
             rootCommand
-                .AddSubCommand1()
-                .AddSubCommand2()
-                .AddGetTokenCommand();
+                .AddSubCommand1(globalOptions)
+                .AddSubCommand2(globalOptions)
+                .AddGetTokenCommand(ghIntegration, globalOptions);
 
             if (args == null)
                 return await rootCommand.InvokeAsync("--help");
@@ -44,16 +51,16 @@ namespace gh_kk{
 
     }
 
-    static class GlobalOptions
+    public class GlobalOptions
     {
-        static Hashtable options;
+        readonly Hashtable options;
 
-        static GlobalOptions()
+        public GlobalOptions()
         {
-            options = new Hashtable();
+            options = [];
         }
 
-        public static void AddOption(string name, Option option)
+        public void AddOption(string name, Option option)
         {
             if (!options.ContainsKey(name))
             {
@@ -61,15 +68,10 @@ namespace gh_kk{
             }
         }
 
-        public static Option<T> GetOption<T>(string name)
+        public Option<T> GetOption<T>(string name)
         {
-            Option<T>? optionValue = options[name] as Option<T>;
-
-            if (optionValue == null)
-            {
-                throw new ArgumentException($"Option {name} is not of type Option<{typeof(T).Name}>");
-            }
-
+            // throw if optionValue is null bacause options does not contain the key
+            var optionValue = options[name] as Option<T> ?? throw new ArgumentException($"Option {name} is not of type Option<{typeof(T).Name}>");
             return optionValue;
         }
     }

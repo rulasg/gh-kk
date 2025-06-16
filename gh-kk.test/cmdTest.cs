@@ -1,26 +1,52 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Reflection;
+using System.Collections;
 
 namespace gh_kk.test;
 
-static class cmdTest
+class CmdTest
 {
-    public static string[] RunAndGetConsoleOutput(string[]? args, params string[] userResponses)
+    public string[] RunAndGetConsoleOutput(string[]? args, params string[] userResponses)
     {
 
-        //Output
-        var _consoleOutput = new StringBuilder();
-        Console.SetOut(new StringWriter(_consoleOutput));
+        var originalOutput = Console.Out;
+        StringWriter? stringWriter = null;
 
-        // Run the main method of the Program class
-        gh_kk.Program.Main(args).GetAwaiter().GetResult();
+        try
+        {
+            //Output
+            var _consoleOutput = new StringBuilder();
+            stringWriter = new StringWriter(_consoleOutput);
+            Console.SetOut(stringWriter);
 
-        // Capture the console output
-        var ret = _consoleOutput.ToString().Split(Environment.NewLine);
+            // Run the main method of the Program class
+            gh_kk.Program.Main(args).GetAwaiter().GetResult();
 
-        // Return the console output as an array of strings
-        return ret;
+            // Capture the console output
+            var output = _consoleOutput.ToString();
+            var ret = output.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+
+            // Return the console output as an array of strings
+            return ret;
+        }
+        finally
+        {
+            try
+            {
+                // Restore the original console output
+                Console.SetOut(originalOutput);
+            }
+            finally
+            {
+                // Dispose of the StringWriter to prevent resource leaks
+                if (stringWriter != null)
+                {
+                    stringWriter.Dispose();
+                }
+            }
+        }
     }
 
 }

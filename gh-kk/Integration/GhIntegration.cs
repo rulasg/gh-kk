@@ -1,14 +1,22 @@
 using System;
+using gh_kk.Integration.Interfaces;
 
 namespace gh_kk.Integration;
 
-public static class GhIntegration
+public class GhIntegration : IGhIntegration
 {
-    public static string GetToken(bool verbose)
+    private readonly IOsIntegration _osIntegration;
+
+    public GhIntegration(IOsIntegration osIntegration)
+    {
+        _osIntegration = osIntegration ?? throw new ArgumentNullException(nameof(osIntegration));
+    }
+
+    public string GetToken(bool verbose)
     {
         try
         {
-            var result = OsIntegration.RunConsoleProcess("gh", "auth token", verbose);
+            var result = _osIntegration.RunConsoleProcess("gh", "auth token", verbose);
 
             if (!result.Success)
             {

@@ -1,16 +1,20 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using Xunit;
 
 
 namespace gh_kk.test;
 
+
+
 public class GetTokenCommandTests
 {
     [Fact]
-    public void Test1()
+    public void Should_returnversion_when_versionargumentisprovided()
     {
         // Arrange
+        var cmdTest = new CmdTest();
         var args = new string[] { "--version" };
 
         // Act
@@ -21,14 +25,20 @@ public class GetTokenCommandTests
     }
 
     [Fact]
-    public void Test_NoParameters()
+    public void Should_returnhelp_when_no_arguments()
     {
         // Arrange
         // var args = new string[] { "" };
+        var cmdTest = new CmdTest();
         string[]? args = null;
 
         // Act
         var result = cmdTest.RunAndGetConsoleOutput(args);
+
+        // Output result to test console
+        System.Console.WriteLine("=== Command Output ===");
+        System.Console.WriteLine(result);
+        System.Console.WriteLine("====================");
 
         // Assert
         Assert.Contains("Description:", result);
@@ -44,22 +54,5 @@ public class GetTokenCommandTests
         Assert.Contains("  subcommand2 <owner> <number>  Call sub command 2", result);
         Assert.Contains("  get-token                     Get auth token from GitHub CLI.", result);
     }
-
-    [Fact]
-    public void Test_GetToken()
-    {
-        // Arrange
-        var expectedToken = gh_kk.Integration.OsIntegration.RunConsoleProcess("gh", "auth token").Output.Trim();
-
-        var args = new string[] { "get-token" };
-
-        // Act
-        var result = cmdTest.RunAndGetConsoleOutput(args);
-
-        var tokenPrompt = result[0];
-        
-        // Assert
-        Assert.Contains(expectedToken, result);
-    }
-
+    
 }

@@ -8,7 +8,7 @@ public static class SubCommand1
 {
 
     // Function to setup the project get command
-    public static RootCommand AddSubCommand1(this RootCommand rootCommand)
+    public static RootCommand AddSubCommand1(this RootCommand rootCommand, GlobalOptions globalOptions)
     {
         var cmd1Arg1 = new Argument<string>(
             name: "owner",
@@ -35,7 +35,7 @@ public static class SubCommand1
         };
 
         // Remove the local verbose option from the handler and use the global one instead
-        var verboseOption = GlobalOptions.GetOption<bool>("verbose");
+        var verboseOption = globalOptions.GetOption<bool>("verbose");
 
         subCommand1.SetHandler((owner, number, description, verbose) =>
         {

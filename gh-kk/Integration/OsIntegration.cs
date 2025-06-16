@@ -1,19 +1,19 @@
 
 using System;
+using gh_kk.Integration.Interfaces;
 
 namespace gh_kk.Integration;
 
-public static class OsIntegration
+public class OsIntegration : IOsIntegration
 {
-
-    public static Result RunConsoleProcess(string FileName, string Arguments, bool verbose = false)
+    public gh_kk.Integration.Result RunConsoleProcess(string fileName, string arguments, bool verbose = false)
     {
         try
         {
             var processStartInfo = new System.Diagnostics.ProcessStartInfo
             {
-                FileName = FileName,
-                Arguments = Arguments,
+                FileName = fileName,
+                Arguments = arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -35,24 +35,8 @@ public static class OsIntegration
         }
         catch (Exception ex)
         {
-            string errorMessage = $"An error occurred while running the process '{FileName}' with arguments '{Arguments}': {ex.Message}";
+            string errorMessage = $"An error occurred while running the process '{fileName}' with arguments '{arguments}': {ex.Message}";
             return new Result(string.Empty, errorMessage, -1);
         }
     }
-
-
-public sealed class Result
-{
-    public string Output { get; }
-    public string Error { get; }
-    public int ExitCode { get; }
-    public bool Success => ExitCode == 0 && !string.IsNullOrWhiteSpace(Output);
-
-    public Result (string output, string error, int exitCode)
-    {
-        Output = output ?? string.Empty;
-        Error = error ?? string.Empty;
-        ExitCode = exitCode;
-    }
-}
 }

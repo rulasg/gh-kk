@@ -13,14 +13,15 @@ namespace gh_kk.test
         public void GetOption_ReturnsOptionWhenExists()
         {
             // Arrange
+            var globalOptions = new GlobalOptions();
             var verboseOption = new Option<bool>(
                 aliases: new[] { "--verbose", "-v" },
                 description: "Enable verbose output (global)");
             verboseOption.AddAlias("-v");
-            GlobalOptions.AddOption("verbose", verboseOption);
+            globalOptions.AddOption("verbose", verboseOption);
 
             // Act - Get the "verbose" option that's added in Program.Main
-            var option = GlobalOptions.GetOption<bool>("verbose");
+            var option = globalOptions.GetOption<bool>("verbose");
 
             // Assert
             Assert.NotNull(option);
@@ -33,27 +34,39 @@ namespace gh_kk.test
         public void GetOption_ThrowsWhenOptionDoesNotExist()
         {
             // Act & Assert
+            var globalOptions = new GlobalOptions();
+            // Trying to get a non-existent option should throw an exception
             var exception = Assert.Throws<ArgumentException>(() => 
-                GlobalOptions.GetOption<string>("nonexistent"));
+                globalOptions.GetOption<string>("nonexistent"));
         }
 
         [Fact]
         public void GetOption_ThrowsWhenOptionTypeDoesNotMatch()
         {
+            // Arrange
+            var globalOptions = new GlobalOptions();
+            var verboseOption = new Option<bool>(
+                aliases: new[] { "--verbose", "-v" },
+                description: "Enable verbose output (global)");
+            globalOptions.AddOption("verbose", verboseOption);
+
+            // Act & Assert
             // The "verbose" option is of type bool, trying to get it as int should throw
-            var exception = Assert.Throws<ArgumentException>(() => 
-                GlobalOptions.GetOption<int>("verbose"));
+            var exception = Assert.Throws<ArgumentException>(() =>
+                globalOptions.GetOption<int>("verbose"));
         }
 
         [Fact]
         public void AddOption_AddsOptionSuccessfully()
         {
             // Arrange
-            var testOption = new Option<int>("--test", "Test option");
+            var globalOptions = new GlobalOptions();
+            // Create a new option to add
+            var testOption = new Option<string>("--test", "Test option");
 
             // Act
-            GlobalOptions.AddOption("test", testOption);
-            var retrievedOption = GlobalOptions.GetOption<int>("test");
+            globalOptions.AddOption("test", testOption);
+            var retrievedOption = globalOptions.GetOption<string>("test");
 
             // Assert
             Assert.NotNull(retrievedOption);
@@ -64,13 +77,16 @@ namespace gh_kk.test
         public void AddOption_DoesNotOverwriteExistingOption()
         {
             // Arrange
+            var globalOptions = new GlobalOptions();
+
+            // Create two options with the same name
             var originalOption = new Option<string>("--original", "Original option");
             var newOption = new Option<string>("--new", "New option");
             
             // Act
-            GlobalOptions.AddOption("duplicate", originalOption);
-            GlobalOptions.AddOption("duplicate", newOption); // Should not overwrite
-            var retrievedOption = GlobalOptions.GetOption<string>("duplicate");
+            globalOptions.AddOption("duplicate", originalOption);
+            globalOptions.AddOption("duplicate", newOption); // Should not overwrite
+            var retrievedOption = globalOptions.GetOption<string>("duplicate");
 
             // Assert
             Assert.Same(originalOption, retrievedOption);
