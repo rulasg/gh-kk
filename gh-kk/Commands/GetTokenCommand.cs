@@ -8,7 +8,7 @@ namespace gh_kk.Commands;
 
 public static class GetTokenCommand
 {
-    public static RootCommand AddGetTokenCommand(this RootCommand rootCommand, IGhIntegration ghIntegration, IGlobalOptions globalOptions)
+    public static RootCommand AddGetTokenCommand(this RootCommand rootCommand, OsIntegrationBinder customBinder, IGlobalOptions globalOptions)
     {
         var verboseOption = globalOptions.GetOption<bool>("verbose");
 
@@ -17,10 +17,14 @@ public static class GetTokenCommand
             description: "Get auth token from GitHub CLI."
         );
 
-        getTokenCommand.SetHandler((verbose) =>
+        getTokenCommand.SetHandler((osIntegration,verbose) =>
         {
+
+            var ghIntegration = new GhIntegration(osIntegration);
+
             GetTokenCommand.Invoke(ghIntegration, verbose);
-        }, verboseOption);
+
+        }, customBinder,verboseOption );
 
         rootCommand.AddCommand(getTokenCommand);
 
@@ -29,12 +33,12 @@ public static class GetTokenCommand
 
     public static void Invoke(IGhIntegration ghIntegration, bool verbose)
     {
-        var token = ghIntegration.GetToken(verbose);
-        if (!string.IsNullOrEmpty(token))
+        try
         {
-            Console.WriteLine(token);
+            var output = ghIntegration.GetToken(verbose);
+            Console.WriteLine(output);
         }
-        else
+        catch 
         {
             Console.Error.WriteLine("Failed to retrieve GitHub token.");
         }

@@ -16,47 +16,55 @@ using gh_kk.Integration;
 using gh_kk.Interfaces;
 
 [assembly: InternalsVisibleTo("gh-kk.test")]
-namespace gh_kk
+namespace gh_kk;
+
+internal class Program
 {
 
-    internal class Program
+    public static async Task<int> Main(string[]? args)
     {
 
-        public static async Task<int> Main(string[]? args)
-        {
+        var rootCommand = new RootCommand("Sample app for System.CommandLine"); // No action if no parameter is provided
 
-            var rootCommand = new RootCommand("Sample app for System.CommandLine"); // No action if no parameter is provided
+        // Define a global option for verbose output
+        var verboseOption = new Option<bool>(aliases: ["--verbose", "-v"], description: "Enable verbose output (global)");
+        rootCommand.AddGlobalOption(verboseOption);
 
-            var verboseOption = new Option<bool>(
-                aliases: new[] { "--verbose", "-v" },
-                description: "Enable verbose output (global)");
-            verboseOption.AddAlias("-v");
+        // Create global options instance to use as parameters for commands constructors
+        IGlobalOptions globalOptions = new GlobalOptions();
+        globalOptions.AddOption("verbose", verboseOption);
 
-            rootCommand.AddGlobalOption(verboseOption);
-            IGlobalOptions globalOptions = new GlobalOptions();
-            globalOptions.AddOption("verbose", verboseOption);
 
-            // Set up dependencies
-            var osIntegration = new Integration.OsIntegration();
-            var ghIntegration = new Integration.GhIntegration(osIntegration);
+        // Set up dependencies
+        var ghIntegration = new GhIntegration(new OsIntegration());
 
-            rootCommand
-                .AddSubCommand1(globalOptions)
-                .AddSubCommand2(globalOptions)
-                .AddGetTokenCommand(ghIntegration, globalOptions);
+        var customBinder = new OsIntegrationBinder(new OsIntegration());
 
-            if (args == null)
-                return await rootCommand.InvokeAsync("--help");
+        rootCommand
+            .AddSubCommand1(globalOptions)
+            .AddSubCommand2(globalOptions)
+            .AddGetTokenCommand(customBinder, globalOptions);
 
-            return await rootCommand.InvokeAsync(args);
-        }
+        if (args == null)
+            return await rootCommand.InvokeAsync("--help");
 
-    }
-
-    public class MyCustomBinder : BinderBase<IOsIntegration>
-    {
-        protected override IOsIntegration GetBoundValue(System.CommandLine.Binding.BindingContext bindingContext)
-            => new OsIntegration();
+        return await rootCommand.InvokeAsync(args);
     }
 
 }
+
+public class OsIntegrationBinder : BinderBase<IOsIntegration>
+{
+    private readonly IOsIntegration _osIntegration;
+
+    // constructor
+    public OsIntegrationBinder(IOsIntegration osIntegration)
+    {
+        _osIntegration = osIntegration;
+    }
+    
+    protected override IOsIntegration GetBoundValue(BindingContext bindingContext)
+        => _osIntegration;
+
+}
+

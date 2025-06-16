@@ -7,7 +7,7 @@ public class GhIntegration : IGhIntegration
 {
     private readonly IOsIntegration _osIntegration;
 
-    public GhIntegration(IOsIntegration osIntegration)
+    public GhIntegration(IOsIntegration? osIntegration)
     {
         _osIntegration = osIntegration ?? throw new ArgumentNullException(nameof(osIntegration));
     }
@@ -20,8 +20,7 @@ public class GhIntegration : IGhIntegration
 
             if (!result.Success)
             {
-                Console.Error.WriteLine($"Failed to get GitHub token. Error: {result.Error}");
-                return string.Empty;
+                throw new Exception($"Failed to get GitHub token. Error: {result.Error}");
             }
 
             if (verbose)
@@ -31,15 +30,9 @@ public class GhIntegration : IGhIntegration
 
             return result.Output.Trim();
         }
-        catch (Exception ex)
+        catch 
         {
-            Console.Error.WriteLine($"An error occurred while getting the GitHub token: {ex.Message}");
-            if (verbose)
-            {
-                Console.Error.WriteLine(ex.ToString());
-            }
-
-            return string.Empty;
+            throw;
         }
     }
 }
