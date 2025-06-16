@@ -4,16 +4,14 @@ using System.Text;
 
 namespace gh_kk.test;
 
-public static class cmdTest
+static class cmdTest
 {
-    public static string[] RunAndGetConsoleOutput(string[] args, params string[] userResponses)
+    public static string[] RunAndGetConsoleOutput(string[]? args, params string[] userResponses)
     {
 
         //Output
         var _consoleOutput = new StringBuilder();
         Console.SetOut(new StringWriter(_consoleOutput));
-        // var consoleOutput = new StringWriter();
-        // Console.SetOut(consoleOutput);
 
         // Run the main method of the Program class
         gh_kk.Program.Main(args).GetAwaiter().GetResult();

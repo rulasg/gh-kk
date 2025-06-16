@@ -1,14 +1,14 @@
 using System;
 
-namespace gh_kk.Integrations;
+namespace gh_kk.Integration;
 
-public static class gh_Integration
+public static class GhIntegration
 {
     public static string GetToken(bool verbose)
     {
         try
         {
-            var result = os_Integration.RunConsoleProcess("gh", "auth token", verbose);
+            var result = OsIntegration.RunConsoleProcess("gh", "auth token", verbose);
 
             if (!result.Success)
             {

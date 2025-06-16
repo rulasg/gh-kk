@@ -18,9 +18,7 @@ namespace gh_kk{
     internal class Program
     {
 
-        static Hashtable globalOptions = new Hashtable();
-
-        public static async Task<int> Main(string[] args)
+        public static async Task<int> Main(string[]? args)
         {
 
             var rootCommand = new RootCommand("Sample app for System.CommandLine"); // No action if no parameter is provided
@@ -38,7 +36,7 @@ namespace gh_kk{
                 .AddSubCommand2()
                 .AddGetTokenCommand();
 
-            if (args.Length == 0)
+            if (args == null)
                 return await rootCommand.InvokeAsync("--help");
 
             return await rootCommand.InvokeAsync(args);

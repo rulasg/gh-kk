@@ -1,9 +1,9 @@
 
 using System;
 
-namespace gh_kk.Integrations;
+namespace gh_kk.Integration;
 
-public static class os_Integration
+public static class OsIntegration
 {
 
     public static Result RunConsoleProcess(string FileName, string Arguments, bool verbose = false)

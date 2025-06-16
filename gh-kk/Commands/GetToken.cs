@@ -27,7 +27,7 @@ public static class GetToken
 
     public static void Invoke(bool verbose)
     {
-        var token = gh_kk.Integrations.gh_Integration.GetToken(verbose);
+        var token = gh_kk.Integration.GhIntegration.GetToken(verbose);
         if (!string.IsNullOrEmpty(token))
         {
             Console.WriteLine(token);
