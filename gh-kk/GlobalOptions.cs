@@ -1,31 +1,35 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.CommandLine;
 using gh_kk.Interfaces;
 
 namespace gh_kk;
 
-public class GlobalOptions : IGlobalOptions
+public sealed class GlobalOptions : IGlobalOptions
 {
-    readonly Hashtable options;
-
-    public GlobalOptions()
-    {
-        options = [];
-    }
+    private readonly Dictionary<string, Option> _options = new();
 
     public void AddOption(string name, Option option)
     {
-        if (!options.ContainsKey(name))
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(option);
+
+        if (!_options.ContainsKey(name))
         {
-            options.Add(name, option);
+            _options.Add(name, option);
         }
     }
 
     public Option<T> GetOption<T>(string name)
     {
-        // throw if optionValue is null bacause options does not contain the key
-        var optionValue = options[name] as Option<T> ?? throw new ArgumentException($"Option {name} is not of type Option<{typeof(T).Name}>");
-        return optionValue;
+        ArgumentNullException.ThrowIfNull(name);
+
+        if (!_options.TryGetValue(name, out var option))
+        {
+            throw new ArgumentException($"Option '{name}' does not exist.", nameof(name));
+        }
+
+        return option as Option<T> 
+            ?? throw new ArgumentException($"Option '{name}' is not of type Option<{typeof(T).Name}>.", nameof(name));
     }
 }

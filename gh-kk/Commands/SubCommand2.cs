@@ -8,6 +8,9 @@ public static class SubCommand2
 {
     public static RootCommand AddSubCommand2(this RootCommand rootCommand, IGlobalOptions globalOptions)
     {
+        ArgumentNullException.ThrowIfNull(rootCommand);
+        ArgumentNullException.ThrowIfNull(globalOptions);
+
         var cmd2Arg1 = new Argument<string>(
             name: "owner",
             description: "The owner of the project."
@@ -33,12 +36,11 @@ public static class SubCommand2
             cmd2Opt1
         };
 
-        // Remove the local verbose option from the handler and use the global one instead
         var verboseOption = globalOptions.GetOption<bool>("verbose");
 
         subCommand2.SetHandler((owner, number, description, verbose) =>
         {
-            SubCommand2.Invoke(owner, number, description, verbose);
+            Invoke(owner, number, description, verbose);
         }, cmd2Arg1, cmd2Arg2, cmd2Opt1, verboseOption);
 
         rootCommand.AddCommand(subCommand2);
@@ -48,15 +50,18 @@ public static class SubCommand2
 
     public static void Invoke(string owner, int number, string? description, bool verbose)
     {
-        var str = $"Called SubCommand2 {number} owned by {owner}.";
+        var message = $"Called SubCommand2 {number} owned by {owner}.";
+        
         if (!string.IsNullOrEmpty(description))
         {
-            str += $"\nDescription: {description}";
+            message += $"\nDescription: {description}";
         }
+        
         if (verbose)
         {
-            str += $"\nVerbose output enabled.";
+            message += "\nVerbose output enabled.";
         }
-        Console.WriteLine(str);
+        
+        Console.WriteLine(message);
     }
 }

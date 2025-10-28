@@ -1,5 +1,3 @@
-using System;
-
 namespace gh_kk.Integration;
 
 public sealed class Result

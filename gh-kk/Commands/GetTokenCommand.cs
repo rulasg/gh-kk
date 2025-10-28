@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.CommandLine;
-using gh_kk.Integration;
 using gh_kk.Interfaces;
 
 namespace gh_kk.Commands;
@@ -10,6 +8,10 @@ public static class GetTokenCommand
 {
     public static RootCommand AddGetTokenCommand(this RootCommand rootCommand, IGhIntegration ghIntegration, IGlobalOptions globalOptions)
     {
+        ArgumentNullException.ThrowIfNull(rootCommand);
+        ArgumentNullException.ThrowIfNull(ghIntegration);
+        ArgumentNullException.ThrowIfNull(globalOptions);
+
         var verboseOption = globalOptions.GetOption<bool>("verbose");
 
         var getTokenCommand = new Command(
@@ -19,7 +21,7 @@ public static class GetTokenCommand
 
         getTokenCommand.SetHandler((verbose) =>
         {
-            GetTokenCommand.Invoke(ghIntegration, verbose);
+            Invoke(ghIntegration, verbose);
         }, verboseOption);
 
         rootCommand.AddCommand(getTokenCommand);
@@ -29,7 +31,10 @@ public static class GetTokenCommand
 
     public static void Invoke(IGhIntegration ghIntegration, bool verbose)
     {
+        ArgumentNullException.ThrowIfNull(ghIntegration);
+
         var token = ghIntegration.GetToken(verbose);
+        
         if (!string.IsNullOrEmpty(token))
         {
             Console.WriteLine(token);

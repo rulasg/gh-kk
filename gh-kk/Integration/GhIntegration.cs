@@ -3,7 +3,7 @@ using gh_kk.Interfaces;
 
 namespace gh_kk.Integration;
 
-public class GhIntegration : IGhIntegration
+public sealed class GhIntegration : IGhIntegration
 {
     private readonly IOsIntegration _osIntegration;
 
@@ -34,6 +34,7 @@ public class GhIntegration : IGhIntegration
         catch (Exception ex)
         {
             Console.Error.WriteLine($"An error occurred while getting the GitHub token: {ex.Message}");
+            
             if (verbose)
             {
                 Console.Error.WriteLine(ex.ToString());

@@ -1,52 +1,39 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Reflection;
-using System.Collections;
 
 namespace gh_kk.test;
 
-class CmdTest
+internal sealed class CmdTest
 {
     public string[] RunAndGetConsoleOutput(string[]? args, params string[] userResponses)
     {
-
         var originalOutput = Console.Out;
         StringWriter? stringWriter = null;
 
         try
         {
-            //Output
-            var _consoleOutput = new StringBuilder();
-            stringWriter = new StringWriter(_consoleOutput);
+            var consoleOutput = new StringBuilder();
+            stringWriter = new StringWriter(consoleOutput);
             Console.SetOut(stringWriter);
 
-            // Run the main method of the Program class
-            gh_kk.Program.Main(args).GetAwaiter().GetResult();
+            Program.Main(args).GetAwaiter().GetResult();
 
-            // Capture the console output
-            var output = _consoleOutput.ToString();
-            var ret = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var output = consoleOutput.ToString();
+            var result = output.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
 
-            // Return the console output as an array of strings
-            return ret;
+            return result;
         }
         finally
         {
             try
             {
-                // Restore the original console output
                 Console.SetOut(originalOutput);
             }
             finally
             {
-                // Dispose of the StringWriter to prevent resource leaks
-                if (stringWriter != null)
-                {
-                    stringWriter.Dispose();
-                }
+                stringWriter?.Dispose();
             }
         }
     }
-
 }

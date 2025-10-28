@@ -1,16 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Text;
-using Xunit;
+using System.CommandLine;
 using Moq;
 using gh_kk.Interfaces;
 using gh_kk.Commands;
-using System.CommandLine;
-
 
 namespace gh_kk.test;
-
-
 
 public class GetTokenCommandTests
 {
@@ -139,7 +134,7 @@ public class GetTokenCommandTests
         // Arrange
         var rootCommand = new RootCommand();
         var mockGhIntegration = new Mock<IGhIntegration>();
-        var globalOptions = new gh_kk.GlobalOptions();
+        var globalOptions = new GlobalOptions();
         globalOptions.AddOption("verbose", new Option<bool>("--verbose"));
         
         // Act
@@ -162,8 +157,7 @@ public class GetTokenCommandTests
         var result = cmdTest.RunAndGetConsoleOutput(args);
 
         // Assert
-        // Count occurrences of newline to determine number of lines in output
-        Assert.Single(result,"fakeToken");
+        Assert.Single(result, "fakeToken");
         
         // Clean up the environment variable after the test
         Environment.SetEnvironmentVariable("GH_TOKEN", null);
@@ -175,15 +169,12 @@ public class GetTokenCommandTests
         // Arrange
         var cmdTest = new CmdTest();
         var args = new string[] { "get-token", "--verbose" };
-        // Set the environment variable before running the test
         Environment.SetEnvironmentVariable("GH_TOKEN", "fakeToken");
-
 
         // Act
         var result = cmdTest.RunAndGetConsoleOutput(args);
 
         // Assert
-        // Count occurrences of newline to determine number of lines in output
         Assert.Equal(2, result.Length);
         Assert.Contains("Successfully retrieved GitHub token.", result);
         Assert.Contains("fakeToken", result);

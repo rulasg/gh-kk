@@ -1,16 +1,19 @@
-
 using System;
+using System.Diagnostics;
 using gh_kk.Interfaces;
 
 namespace gh_kk.Integration;
 
-public class OsIntegration : IOsIntegration
+public sealed class OsIntegration : IOsIntegration
 {
-    public gh_kk.Integration.Result RunConsoleProcess(string fileName, string arguments, bool verbose = false)
+    public Result RunConsoleProcess(string fileName, string arguments, bool verbose = false)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+        ArgumentNullException.ThrowIfNull(arguments);
+
         try
         {
-            var processStartInfo = new System.Diagnostics.ProcessStartInfo
+            var processStartInfo = new ProcessStartInfo
             {
                 FileName = fileName,
                 Arguments = arguments,
@@ -19,9 +22,10 @@ public class OsIntegration : IOsIntegration
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-            using var process = System.Diagnostics.Process.Start(processStartInfo);
 
-            if (process == null)
+            using var process = Process.Start(processStartInfo);
+
+            if (process is null)
             {
                 return new Result(string.Empty, "Failed to start the process.", -1);
             }
