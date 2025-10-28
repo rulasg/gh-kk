@@ -43,4 +43,36 @@ public sealed class GhIntegration : IGhIntegration
             return string.Empty;
         }
     }
+
+    public string GetActiveUser(bool verbose)
+    {
+        try
+        {
+            var result = _osIntegration.RunConsoleProcess("gh", "api user", verbose);
+
+            if (!result.Success)
+            {
+                Console.Error.WriteLine($"Failed to get active user information. Error: {result.Error}");
+                return string.Empty;
+            }
+
+            if (verbose)
+            {
+                Console.WriteLine("Successfully retrieved active user information.");
+            }
+
+            return result.Output.Trim();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"An error occurred while getting the active user: {ex.Message}");
+            
+            if (verbose)
+            {
+                Console.Error.WriteLine(ex.ToString());
+            }
+
+            return string.Empty;
+        }
+    }
 }

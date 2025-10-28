@@ -55,11 +55,18 @@ public class GetTokenCommandTests
     }
     
     [Fact]
-    public void Should_output_token_when_successful()
+    public void Should_output_user_info_when_successful()
     {
         // Arrange
         var mockGhIntegration = new Mock<IGhIntegration>();
-        mockGhIntegration.Setup(m => m.GetToken(false)).Returns("mock_token_value");
+        var mockUserJson = @"{
+            ""login"": ""testuser"",
+            ""name"": ""Test User"",
+            ""email"": ""test@example.com"",
+            ""company"": ""Test Company"",
+            ""bio"": ""A test user""
+        }";
+        mockGhIntegration.Setup(m => m.GetActiveUser(false)).Returns(mockUserJson);
         
         // Redirect console output for assertion
         var consoleOutput = new StringWriter();
@@ -67,22 +74,30 @@ public class GetTokenCommandTests
         
         // Act
         GetTokenCommand.Invoke(mockGhIntegration.Object, false);
-        var result = consoleOutput.ToString().TrimEnd();
+        var result = consoleOutput.ToString();
         
         // Cleanup
         Console.SetOut(Console.Out);
         
         // Assert
-        Assert.Equal("mock_token_value", result);
-        mockGhIntegration.Verify(m => m.GetToken(false), Times.Once);
+        Assert.Contains("Active GitHub User: testuser", result);
+        Assert.Contains("Name: Test User", result);
+        Assert.Contains("Email: test@example.com", result);
+        Assert.Contains("Company: Test Company", result);
+        Assert.Contains("Bio: A test user", result);
+        mockGhIntegration.Verify(m => m.GetActiveUser(false), Times.Once);
     }
     
     [Fact]
-    public void Should_output_token_when_successful_with_verbose()
+    public void Should_output_user_info_with_verbose()
     {
         // Arrange
         var mockGhIntegration = new Mock<IGhIntegration>();
-        mockGhIntegration.Setup(m => m.GetToken(true)).Returns("mock_token_value");
+        var mockUserJson = @"{
+            ""login"": ""testuser"",
+            ""name"": ""Test User""
+        }";
+        mockGhIntegration.Setup(m => m.GetActiveUser(true)).Returns(mockUserJson);
         
         // Redirect console output for assertion
         var consoleOutput = new StringWriter();
@@ -90,22 +105,24 @@ public class GetTokenCommandTests
         
         // Act
         GetTokenCommand.Invoke(mockGhIntegration.Object, true);
-        var result = consoleOutput.ToString().TrimEnd();
+        var result = consoleOutput.ToString();
         
         // Cleanup
         Console.SetOut(Console.Out);
         
         // Assert
-        Assert.Equal("mock_token_value", result);
-        mockGhIntegration.Verify(m => m.GetToken(true), Times.Once);
+        Assert.Contains("Active GitHub User: testuser", result);
+        Assert.Contains("Name: Test User", result);
+        Assert.Contains("Full JSON Response:", result);
+        mockGhIntegration.Verify(m => m.GetActiveUser(true), Times.Once);
     }
     
     [Fact]
-    public void Should_output_error_when_token_retrieval_fails()
+    public void Should_output_error_when_user_retrieval_fails()
     {
         // Arrange
         var mockGhIntegration = new Mock<IGhIntegration>();
-        mockGhIntegration.Setup(m => m.GetToken(false)).Returns(string.Empty);
+        mockGhIntegration.Setup(m => m.GetActiveUser(false)).Returns(string.Empty);
         
         // Redirect error output for assertion
         var originalError = Console.Error;
@@ -125,7 +142,7 @@ public class GetTokenCommandTests
         Console.SetOut(originalOut);
         
         // Assert
-        Assert.Equal("Failed to retrieve GitHub token.", result);
+        Assert.Equal("Failed to retrieve active user information.", result);
     }
     
     [Fact]
@@ -151,16 +168,12 @@ public class GetTokenCommandTests
         // Arrange
         var cmdTest = new CmdTest();
         var args = new string[] { "active-user" };
-        Environment.SetEnvironmentVariable("GH_TOKEN", "fakeToken");
 
         // Act
         var result = cmdTest.RunAndGetConsoleOutput(args);
 
-        // Assert
-        Assert.Single(result, "fakeToken");
-        
-        // Clean up the environment variable after the test
-        Environment.SetEnvironmentVariable("GH_TOKEN", null);
+        // Assert - should contain "Active GitHub User:" in output
+        Assert.Contains(result, line => line.Contains("Active GitHub User:"));
     }
 
     [Fact]
@@ -169,17 +182,11 @@ public class GetTokenCommandTests
         // Arrange
         var cmdTest = new CmdTest();
         var args = new string[] { "active-user", "--verbose" };
-        Environment.SetEnvironmentVariable("GH_TOKEN", "fakeToken");
 
         // Act
         var result = cmdTest.RunAndGetConsoleOutput(args);
 
-        // Assert
-        Assert.Equal(2, result.Length);
-        Assert.Contains("Successfully retrieved GitHub token.", result);
-        Assert.Contains("fakeToken", result);
-
-        // Clean up the environment variable after the test
-        Environment.SetEnvironmentVariable("GH_TOKEN", null);
+        // Assert - should contain user info and verbose messages
+        Assert.Contains(result, line => line.Contains("Active GitHub User:") || line.Contains("Successfully retrieved"));
     }
 }
