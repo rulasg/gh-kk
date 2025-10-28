@@ -51,7 +51,7 @@ public class GetTokenCommandTests
         Assert.Contains("Commands:", result);
         Assert.Contains("  subcommand1 <owner> <number>  Call sub command 1", result);
         Assert.Contains("  subcommand2 <owner> <number>  Call sub command 2", result);
-        Assert.Contains("  get-token                     Get auth token from GitHub CLI.", result);
+        Assert.Contains("  active-user                   Get the active GitHub user information.", result);
     }
     
     [Fact]
@@ -142,7 +142,7 @@ public class GetTokenCommandTests
         
         // Assert
         Assert.Same(rootCommand, result);
-        Assert.Single(rootCommand.Subcommands, cmd => cmd.Name == "get-token");
+        Assert.Single(rootCommand.Subcommands, cmd => cmd.Name == "active-user");
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public class GetTokenCommandTests
     {
         // Arrange
         var cmdTest = new CmdTest();
-        var args = new string[] { "get-token" };
+        var args = new string[] { "active-user" };
         Environment.SetEnvironmentVariable("GH_TOKEN", "fakeToken");
 
         // Act
@@ -168,7 +168,7 @@ public class GetTokenCommandTests
     {
         // Arrange
         var cmdTest = new CmdTest();
-        var args = new string[] { "get-token", "--verbose" };
+        var args = new string[] { "active-user", "--verbose" };
         Environment.SetEnvironmentVariable("GH_TOKEN", "fakeToken");
 
         // Act

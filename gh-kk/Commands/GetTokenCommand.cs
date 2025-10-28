@@ -15,8 +15,8 @@ public static class GetTokenCommand
         var verboseOption = globalOptions.GetOption<bool>("verbose");
 
         var getTokenCommand = new Command(
-            name: "get-token",
-            description: "Get auth token from GitHub CLI."
+            name: "active-user",
+            description: "Get the active GitHub user information."
         );
 
         getTokenCommand.SetHandler((verbose) =>
